@@ -1,0 +1,435 @@
+<%--
+Created by IntelliJ IDEA.
+User: 185107240qq.com
+Date: 2017/10/28
+Time: 10:30
+To change this template use File | Settings | File Templates.
+--%>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1,user-scalable=0">
+    <title>门诊统计</title>
+    <link rel="stylesheet" type="text/css" href="<%=path%>/resources/css/static/static.css?v=011">
+    <script src="<%=path%>/resources/js/Chart.js"></script>
+    <script src="<%=path%>/resources/js/vue.js?v=10"></script>
+</head>
+<style>
+    .cut-weui-cell{
+        margin-top: 0em;
+        border-top:0px;
+        border-bottom: 0px;
+        padding:0;
+    }
+    .add-color
+    {
+        background-color: #fafafa;
+    }
+    .add-border-top{
+        border-top:1px solid #d9d9d9;
+    }
+    .add-border-bottom{
+        border-bottom: 1px solid #d9d9d9;
+    }
+    .active{
+        background-color: #279ff6;
+        color: #ffffff;
+    }
+
+    [v-cloak]{
+        display:none;
+    }
+
+</style>
+
+<body>
+<div class="container" id="container" v-cloak>
+    <!-- 顶部导航--->
+    <div class="weui-cells cut-weui-cell add-color" >
+        <div class="weui-cell">
+            <div class="weui-cell__hd">
+                <img class="img_top" src="<%=path%>/resources/images/img/r.png" alt="" >
+            </div>
+            <div class="weui-cell__bd weui-form-preview__btn_default">
+                <p>{{time_top}}</p>
+            </div>
+            <div v-on:click="selectPage()" class="weui-cell__ft" >
+                <img class="img_top"  src="<%=path%>/resources/images/img/r2.png">
+            </div>
+        </div>
+    </div>
+    <div id="info-page" v-show="isShow"  >
+        <div v-if=" basicInfo!=null && basicInfo.s_mzys && basicInfo.s_mzys!=null && basicInfo.s_mzys!=''"  >
+            <!-- 用户门诊信息--->
+            <div class="weui-panel__bd add-border-bottom">
+                <a href="javascript:void(0);" class="weui-media-box weui-media-box_appmsg">
+                    <div  class="weui-media-box__hd">
+                        <div v-if="basicInfo.rankNum!=null ">
+                            <img v-if="basicInfo.rankNum==1" class="weui-media-box__thumb" src="<%=path%>/resources/images/img/ph1.png" >
+                            <img v-if="basicInfo.rankNum==2" class="weui-media-box__thumb" src="<%=path%>/resources/images/img/ph2.png" >
+                            <img v-if="basicInfo.rankNum==3" class="weui-media-box__thumb" src="<%=path%>/resources/images/img/ph3.png" >
+                            <div v-if="basicInfo.rankNum>3 || basicInfo.rankNum==0 " style="position:relative;" class="weui-media-box__thumb">
+                                <img  class="weui-media-box__thumb" src="<%=path%>/resources/images/img/p1.png" alt="">
+                                <div class="rang_img"  >
+                                    排名
+                                </div>
+                                <div  class="rang_img" style="z-indent:2; top:0.5em;font-size: 1rem; color:#FF4905;">
+                                    {{basicInfo.rankNum}}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="weui-media-box__name weui-form-preview__btn_default">
+                        {{basicInfo.s_mzys}}
+                    </div>
+                    <div class="weui-media-box__bd">
+                        <div class="weui-cells cut-weui-cell" >
+                            <div class="weui-cell add-border-bottom">
+                                <div class="weui-cell__bd">
+                                    <span>今日门诊</span>
+                                    <span class="weui-form-out-num">{{basicInfo.outNum}}</span>
+                                </div>
+                                <div class="weui-cell__bd" >
+                                    <span>本月累计</span>
+                                    <span class="weui-form-out-num">{{basicInfo.outMonthNum}}</span>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="weui-cells cut-weui-cell ">
+                            <div class="weui-cell">
+                                <div class="weui-cell__bd">
+                                    <span>今日预约</span>
+                                    <span class="weui-form-out-num">{{ basicInfo.orderNum}}</span>
+                                </div>
+                                <div class="weui-cell__bd  " style="">
+
+                                    <span>本月累计</span>
+                                    <span class="weui-form-out-num">{{basicInfo.orderMonthNum}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <!-- 用户门诊预约图表--->
+            <div class="weui-panel__bd">
+                <div class="weui-media-box weui-media-box_text">
+                    <canvas id="canvasa"  width="330px"></canvas>
+                </div>
+            </div>
+        </div>
+        <!--分界线-->
+        <div style="background-color: #EFF4F4;height:0.7rem;"></div>
+        <!-- 全院门诊信息--->
+        <div class="weui-form-preview__ft add-color" >
+            <div class="weui-form-preview__btn weui-form-preview__btn_default add-border-right" href="javascript:">
+                <p v-if=" basicInfo.s_office==null || basicInfo.s_office==''">全院门诊</p>
+                <p v-if="basicInfo!=null && basicInfo.s_office!=null && basicInfo.s_office!=''">{{basicInfo.s_office}}门诊</p>
+                <em class="weui-form-preview__value">{{basicInfo.fullOutNum}}</em>
+            </div>
+            <div class="weui-form-preview__btn weui-form-preview__btn_default add-border-right" href="javascript:">
+                <p v-if="basicInfo.s_office==null || basicInfo.s_office==''">全院预约</p>
+                <p v-if="basicInfo!=null && basicInfo.s_office!=null && basicInfo.s_office!=''">{{basicInfo.s_office}}预约</p>
+                <em class="weui-form-preview__value">{{basicInfo.fullOrderNum}}</em>
+            </div>
+        </div>
+        <!-- 全院门诊预约图表--->
+        <div class="weui-panel__bd">
+            <div class="weui-media-box weui-media-box_text">
+                <canvas id="canvasb" width="330px" ></canvas>
+            </div>
+        </div>
+
+        <!-- 全院各个科室排行榜--标题--->
+        <div class="weui-cells__title">门诊榜</div>
+        <div class="weui-form-preview__ft add-border-top add-border-bottom add-color" style="line-height: 2rem;">
+            <div class="weui-form-preview__btn weui-form-preview__btn_default" >
+                <span>排名</span>
+                <span class="weui-form-left">科室</span>
+                <span class="weui-form-left">门诊人数</span>
+            </div>
+
+            <div class="weui-form-preview__btn weui-form-preview__btn_default">
+                <span>排名</span>
+                <span class="weui-form-left">科室</span>
+                <span class="weui-form-left">预约人数</span>
+            </div>
+        </div>
+        <!-- 全院各个科室排行榜--内容--->
+        <div v-if=" outRank!=null" class="weui-form-preview__ft " style="line-height: 35px;">
+            <!-- 全院门诊排行榜--内容--->
+            <div  class="weui-form-preview__btn weui-form-preview__btn_default"  >
+                <div v-for="item in outRank" class="weui-flex">
+                    <div class="weui-flex__item" style="flex: 0.7;">{{item.rankNum}}</div>
+                    <div class="weui-flex__item " style="color: #0b68b7; -webkit-box-flex: 2.3;flex: 2.3;">{{item.s_office}}</div>
+                    <div class="weui-flex__item " style="text-align: left">
+                        <div class="weui-cell cut-weui-cell">
+                            <div class="weui-cell__bd">
+                                <p>{{item.outNum}}</p>
+                            </div>
+                            <div class="weui-cell__ft">
+                                <img v-if="item.rankFlag==0" class="img_rank"   src="<%=path%>/resources/images/img/jiang.png">
+                                <img v-if="item.rankFlag==1" class="img_rank"  src="<%=path%>/resources/images/img/sheng.png">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!-- 全院预约排行榜--内容--->
+            <div  class="weui-form-preview__btn weui-form-preview__btn_default" style="padding:0 0.5em;">
+                <div v-for="orderList in orderRank"  class="weui-flex">
+                    <div class="weui-flex__item" style="flex: 0.7;">{{orderList.rankNum}}</div>
+                    <div class="weui-flex__item " style="color: #0b68b7; -webkit-box-flex: 2.3;flex: 2.3;">{{orderList.s_office}}</div>
+                    <div class="weui-flex__item " style="text-align: left">
+                        <div class="weui-cell cut-weui-cell">
+                            <div class="weui-cell__bd">
+                                <p>{{orderList.orderNum}}</p>
+                            </div>
+                            <div class="weui-cell__ft">
+                                <img v-if="orderList.rankFlag==0" class="img_rank"  src="<%=path%>/resources/images/img/jiang.png">
+                                <img v-if="orderList.rankFlag==1" class="img_rank"  src="<%=path%>/resources/images/img/sheng.png">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- 分类弹出栏--->
+    <div  id="selectPage" v-show="selectPageShow" class="big">
+        <div class="weui-cells cut-weui-cell">
+            <a class="weui-cell weui-cell_access" href="javascript:;">
+                <div class="weui-cell__bd">
+                    <p>对象</p>
+                </div>
+                <div v-on:click="showPersonObj()"v-bind:class="{ 'weui-cell__down' : personObjShow, 'weui-cell__up': !personObjShow}"  class="weui-cell__up">
+                </div>
+            </a>
+        </div>
+        <div v-show="personObjShow" class="page__bd page__bd_spacing">
+            <div class="weui-flex"  >
+                <div class="weui-flex__item " ><div v-bind:class="{'active':office_flag=='person'}" v-on:click="officeSelect('person','本人')" class="placeholder">本人</div></div>
+                <div class="weui-flex__item"><div v-bind:class="{'active':office_flag=='full'}" v-on:click="officeSelect('full','全院')" class="placeholder">全院</div></div>
+
+            </div>
+            <div   class="weui-flex" style="display: -webkit-box">
+                <div v-for="(office,officeIndex) in officeList"  class="weui-flex__item  weui-flex__item-add">
+                    <div v-bind:class="{'active':office_flag==office.code}" v-on:click='officeSelect(office.code,office.s_office)' class="placeholder">{{office.s_office}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="weui-cells cut-weui-cell">
+            <a class="weui-cell weui-cell_access" href="javascript:;">
+                <div class="weui-cell__bd">
+                    <p>时间</p>
+                </div>
+                <div v-on:click="showTimeObj()" v-bind:class="{ 'weui-cell__down' : timeObjShow, 'weui-cell__up': !timeObjShow}"  class="weui-cell__up">
+                </div>
+            </a>
+        </div>
+        <div v-show="timeObjShow"  class="page__bd page__bd_spacing">
+            <div   class="weui-flex" style="display: block">
+                <div v-for="(timeList,index) in time_select"   class="weui-flex__item  weui-flex__item-add " >
+                    <div v-bind:class="{'active':time_flag==timeList.time}" v-on:click='timeSelect(timeList.time,timeList.data_times)' class="placeholder">{{timeList.time}}</div>
+
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="weui-btn-area" v-on:click="submit()" >
+            <a  class="weui-btn weui-btn_primary" href="javascript:" id="showTooltips">确定</a>
+        </div>
+    </div>
+
+
+</div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#container',
+        data: {
+            basicInfo:${basicInfo},
+            time_top:'',
+            outRank:${outRank},
+            orderRank:${orderRank},
+            officeList:${officeList},
+            isShow:true,
+            selectPageShow:false,
+            personObjShow:true,//对象选择
+            timeObjShow:true,//时间选择
+            time_select:[
+                {
+                    "time":"今日",
+                    "data_times":0
+                },
+                {
+                    "time":"昨日",
+                    "data_times":1
+                },
+                {
+                    "time":"本周",
+                    "data_times":0
+                },
+                {
+                    "time":"上周",
+                    "data_times":1
+                },
+                {
+                    "time":"本月",
+                    "data_times":0
+                },
+                {
+                    "time":"上月",
+                    "data_times":1
+                }
+            ],
+            time_flag:'今日',
+            data_times:0,
+            office_flag:'person',
+            office_name:'本人',
+            active:'today',//标签切换样式
+            perData:{
+                labels :${pertime},
+                datasets : [
+                    {
+                        label: "门诊",
+                        //填充颜色
+                        fillColor : "rgba(40,159,246,0.1)",
+                        //线的颜色
+                        strokeColor : "rgba(40,159,246,0.7)",
+                        //点的填充颜色
+                        pointColor : "rgba(40,159,246,1)",
+                        pointStrokeColor : "#fff",
+                        pointHighlightFill : "#fff",
+                        pointHighlightStroke : "rgba(220,220,220,1)",
+                        data :${perOutLine}
+                    },
+                    {
+                        label: "预约",
+                        fillColor : "rgba(237,118,54,0.2)",
+                        strokeColor : "rgba(237,118,54,0.5)",
+                        pointColor : "rgba(237,118,54,1)",
+                        //点的边线颜色
+                        pointStrokeColor : "#fff",
+                        pointHighlightFill : "#fff",
+                        pointHighlightStroke : "rgba(151,187,205,1)",
+                        data : ${perOrderLine}
+                    }
+                ]
+            },
+            fullData:{
+                labels :${fullday},
+                datasets : [
+                    {
+                        label: "门诊",
+                        //填充颜色
+                        fillColor : "rgba(40,159,246,0.1)",
+                        //线的颜色
+                        strokeColor : "rgba(40,159,246,0.7)",
+                        //点的填充颜色
+                        pointColor : "rgba(40,159,246,1)",
+                        pointStrokeColor : "#fff",
+                        pointHighlightFill : "#fff",
+                        pointHighlightStroke : "rgba(220,220,220,1)",
+                        data : ${fullOutLine}
+                    },
+                    {
+                        label: "预约",
+                        fillColor : "rgba(237,118,54,0.2)",
+                        strokeColor : "rgba(237,118,54,0.5)",
+                        pointColor : "rgba(237,118,54,1)",
+                        //点的边线颜色
+                        pointStrokeColor : "#fff",
+                        pointHighlightFill : "#fff",
+                        pointHighlightStroke : "rgba(151,187,205,1)",
+                        data : ${fullOrderLine}
+                    }
+                ]
+            },
+        },
+
+        methods: {
+            getUrlParam:function () {
+                var name = 'time_obj';
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+                var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+                var mydate= new Date();
+                var month = mydate.getMonth()+1;
+                var today_date = mydate.getFullYear()+'-'+month+'-'+mydate.getDate();
+                if (r != null)
+                {
+                    this.time_top=decodeURIComponent(r[2]);
+                } else{
+                    this.time_top=today_date;
+                }
+            },
+
+            lineShow:function () {
+                if (app.basicInfo && app.basicInfo.s_mzys!=null &&  app.basicInfo.s_mzys != '') {
+
+                    var ctx=document.getElementById("canvasa").getContext("2d");
+                    var myNewChart = new Chart(ctx);
+                    myNewChart.Line(app.perData);
+                }
+
+                var ctxb=document.getElementById("canvasb").getContext("2d");
+                // var ctx = $("#canvasb").get(0).getContext("2d");
+                var hospChart = new Chart(ctxb);
+                hospChart.Line(app.fullData);
+            },
+            selectPage:function () {
+                this.isShow=!this.isShow;
+                this.selectPageShow=!this.selectPageShow;
+            },
+            //显示隐藏对象内容
+            showPersonObj:function () {
+                this.personObjShow=!this.personObjShow;
+            },
+            //显示隐藏时间内容
+            showTimeObj:function () {
+                this.timeObjShow=!this.timeObjShow;
+            },
+            //时间选择
+            timeSelect:function(index,data_times){
+                this.time_flag=index;
+                this.data_times=data_times;
+            },
+            //科室选择
+            officeSelect:function (code,s_office) {
+                this.office_flag=code;
+                this.office_name=s_office;
+            },
+            //确定按钮
+            submit:function () {
+
+                var url="s_office="+this.office_name+"&code="+this.office_flag+"&time_obj="+this.time_flag+"&data_times="+this.data_times+"&doctor_flag=1";
+                //  url=encodeURI(encodeURI(url)); //用了2次encodeURI
+                if(this.time_flag =='今日' || this.time_flag =='昨日')
+                {
+                    if(this.office_flag=='person')
+                    {
+                        location.href="<%=path%>/static/personStaticGet?"+url;
+                    }else{
+                        location.href="<%=path%>/static/personStaticGet?"+url;
+                    }
+                }
+                //周或月的查询统计
+                else{
+
+                    location.href="<%=path%>/static/personStaticGet?"+url;
+
+                }
+            },
+
+        }
+    })
+    app.lineShow();
+    app.getUrlParam();
+</script>
+</html>
